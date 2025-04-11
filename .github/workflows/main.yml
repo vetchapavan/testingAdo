@@ -1,36 +1,18 @@
-name: Sync GitHub Issue to Azure DevOps
+name: Scheduled Sync to Azure DevOps (Every 1 Min)
 
 on:
-  issues:
-    types: [opened, labeled, unlabeled, closed, reopened, edited]
+  schedule:
+    - cron: '*/1 * * * *'  # Every 1 minute
 
 concurrency:
-  group: issue-${{ github.event.issue.number }}
+  group: issue-scheduler
   cancel-in-progress: false
 
 jobs:
-  sync:
-    if: ${{ !github.event.issue.pull_request }}
+  sync-to-ado:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Determine ADO state from label
-        id: setstate
-        run: |
-          echo "Label: ${{ github.event.label.name }}"
-          LABEL="${{ github.event.label.name }}"
-          if [[ "$LABEL" == "To Do" ]]; then
-            echo "state=To Do" >> $GITHUB_OUTPUT
-          elif [[ "$LABEL" == "In Progress" ]]; then
-            echo "state=Doing" >> $GITHUB_OUTPUT
-          elif [[ "$LABEL" == "Done" ]]; then
-            echo "state=Done" >> $GITHUB_OUTPUT
-          else
-            echo "state=" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Sync to Azure DevOps
-        if: ${{ steps.setstate.outputs.state != '' }}
+      - name: Sync GitHub Issues to Azure DevOps
         uses: danhellem/github-actions-issue-to-work-item@master
         env:
           ado_token: "${{ secrets.ADO }}"
@@ -41,7 +23,6 @@ jobs:
           ado_new_state: "To Do"
           ado_active_state: "Doing"
           ado_close_state: "Done"
-          ado_tags: "Bug,UserStory"
+          ado_ADO tags: "Bug, Auto-Sync"
           ado_bypassrules: true
-          ado_state: "${{ steps.setstate.outputs.state }}"
           log_level: 100
