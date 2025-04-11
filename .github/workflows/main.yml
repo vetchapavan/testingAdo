@@ -1,18 +1,20 @@
-name: Scheduled Sync to Azure DevOps (Every 1 Min)
+name: Sync GitHub Issue to Azure DevOps Work Item
 
 on:
-  schedule:
-    - cron: '*/1 * * * *'  # Every 1 minute
+  issues:
+    types: [opened, edited, labeled, unlabeled]
 
 concurrency:
-  group: issue-scheduler
+  group: issue-${{ github.event.issue.number }}
   cancel-in-progress: false
 
 jobs:
   sync-to-ado:
+    if: ${{ !github.event.issue.pull_request }}
     runs-on: ubuntu-latest
+
     steps:
-      - name: Sync GitHub Issues to Azure DevOps
+      - name: Sync to Azure DevOps
         uses: danhellem/github-actions-issue-to-work-item@master
         env:
           ado_token: "${{ secrets.ADO }}"
@@ -23,6 +25,6 @@ jobs:
           ado_new_state: "To Do"
           ado_active_state: "Doing"
           ado_close_state: "Done"
-          ado_ADO tags: "Bug, Auto-Sync"
+          ado_tags: "AutoSync"
           ado_bypassrules: true
           log_level: 100
