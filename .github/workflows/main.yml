@@ -16,10 +16,6 @@ jobs:
     if: ${{ !github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     steps:
-      - name: Compose multiple tags
-        id: set-tags
-        run: |
-          echo "ADO_TAGS=Bug;status-${{ github.event.issue.state }}" >> $GITHUB_ENV
       - uses: danhellem/github-actions-issue-to-work-item@master
         env:
           ado_token: "${{ secrets.ADO }}"
@@ -31,5 +27,5 @@ jobs:
           ado_active_state: "Doing"
           ado_close_state: "Done"
           ado_bypassrules: true
-          ado_Add Tag: "${{ env.ADO_TAGS }}"
+          ado_Add Tag: "Issue"
           log_level: 100
