@@ -1,22 +1,37 @@
-name: Sync issue to Azure DevOps work item
+name: Sync GitHub Issue to Azure DevOps
 
 on:
   issues:
-    types:
-      [opened, edited, deleted, closed, reopened, labeled, unlabeled, assigned]
-  issue_comment:
-    types: [created, edited, deleted]
+    types: [opened, labeled, unlabeled, closed, reopened, edited]
 
 concurrency:
   group: issue-${{ github.event.issue.number }}
   cancel-in-progress: false
 
 jobs:
-  alert:
+  sync:
     if: ${{ !github.event.issue.pull_request }}
     runs-on: ubuntu-latest
+
     steps:
-      - uses: danhellem/github-actions-issue-to-work-item@master
+      - name: Determine ADO state from label
+        id: setstate
+        run: |
+          echo "Label: ${{ github.event.label.name }}"
+          LABEL="${{ github.event.label.name }}"
+          if [[ "$LABEL" == "To Do" ]]; then
+            echo "state=To Do" >> $GITHUB_OUTPUT
+          elif [[ "$LABEL" == "In Progress" ]]; then
+            echo "state=Doing" >> $GITHUB_OUTPUT
+          elif [[ "$LABEL" == "Done" ]]; then
+            echo "state=Done" >> $GITHUB_OUTPUT
+          else
+            echo "state=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sync to Azure DevOps
+        if: ${{ steps.setstate.outputs.state != '' }}
+        uses: danhellem/github-actions-issue-to-work-item@master
         env:
           ado_token: "${{ secrets.ADO }}"
           github_token: "${{ secrets.GITHUB }}"
@@ -26,6 +41,7 @@ jobs:
           ado_new_state: "To Do"
           ado_active_state: "Doing"
           ado_close_state: "Done"
+          ado_tags: "Bug,UserStory"
           ado_bypassrules: true
-          ado_Add Tag: "Issue"
+          ado_state: "${{ steps.setstate.outputs.state }}"
           log_level: 100
