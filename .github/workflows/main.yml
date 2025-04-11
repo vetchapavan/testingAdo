@@ -2,7 +2,7 @@ name: Sync GitHub Issue to Azure DevOps Work Item
 
 on:
   issues:
-    types: [opened, edited, labeled, unlabeled]
+    types: [opened, edited, labeled, unlabeled,closed, reopened]
 
 concurrency:
   group: issue-${{ github.event.issue.number }}
