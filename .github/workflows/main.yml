@@ -27,4 +27,5 @@ jobs:
           ado_active_state: "Active"
           ado_close_state: "Closed"
           ado_bypassrules: true
+          ado_tags: "UserStory;Bug"
           log_level: 100
